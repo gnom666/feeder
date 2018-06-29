@@ -19,6 +19,9 @@ public class WordNER {
 	private int position;
 	private int offset;
 	
+	private LocationNER location;
+	private PeriodNER period;
+	
 	public WordNER (String w, String nerTag, Double tokenProb, int position, int offset) {
 		this.w = w;
 		this.nerTag = nerTag;

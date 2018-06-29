@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -14,6 +15,7 @@ import org.springframework.util.Assert;
 import com.joestelmach.natty.DateGroup;
 import com.joestelmach.natty.Parser;
 import com.taiger.nlp.feeder.model.Constants;
+import com.taiger.nlp.feeder.model.HistoricalPeriod;
 import com.taiger.nlp.feeder.model.PeriodNER;
 import com.taiger.nlp.feeder.model.SentenceNER;
 import com.taiger.nlp.feeder.model.WordNER;
@@ -51,7 +53,7 @@ public class DateFinderNER implements NER {
 		for (int i = 0; i < sentence.getS().size(); i++) {
 			tokens[i] = sentence.getS().get(i).getW();
 		}
-
+ 
 		Span spans[] = nameFinder.find(tokens);
 		for (Span span : spans) {
 			sentence.getS().get(span.getStart()).setNerTag(Constants.B + Constants.DATE);
@@ -97,37 +99,42 @@ public class DateFinderNER implements NER {
 	}
 	
 	private Set<PeriodNER> findPeriods (int year) {
-		Set<PeriodNER> periods = new HashSet<>();
+		Set<HistoricalPeriod> periods = new HashSet<>();
 		
 		if (year <= -800) {
-			periods.add(PeriodNER.PREHISTORY);
+			periods.add(HistoricalPeriod.PREHISTORY);
 		}
 		if (year > -800 && year < 800) {
-			periods.add(PeriodNER.ANCIENT_AGE);
+			periods.add(HistoricalPeriod.ANCIENT_AGE);
 		}
 		if (year >= 400 && year < 1000) {
-			periods.add(PeriodNER.MIDDLE_AGE);
+			periods.add(HistoricalPeriod.MIDDLE_AGE);
 		}
 		if (year >= 1000 && year < 1492) {
-			periods.add(PeriodNER.LATE_MIDDLE_AGE);
+			periods.add(HistoricalPeriod.LATE_MIDDLE_AGE);
 		}
 		if (year >= 1492 && year < 1600) {
-			periods.add(PeriodNER.MODERN_HISTORY_XVI);
+			periods.add(HistoricalPeriod.MODERN_HISTORY_XVI);
 		}
 		if (year >= 1600 && year < 1776) {
-			periods.add(PeriodNER.MODERN_HISTORY_XVII);
+			periods.add(HistoricalPeriod.MODERN_HISTORY_XVII);
 		}
 		if (year >= 1776 && year < 1900) {
-			periods.add(PeriodNER.CONTEMPORARY_HISTORY_XIX);
+			periods.add(HistoricalPeriod.CONTEMPORARY_HISTORY_XIX);
 		}
 		if (year >= 1900 && year < 2000) {
-			periods.add(PeriodNER.CONTEMPORARY_HISTORY_XX);
+			periods.add(HistoricalPeriod.CONTEMPORARY_HISTORY_XX);
 		}
 		if (year >= 2000) {
-			periods.add(PeriodNER.CONTEMPORARY_HISTORY_XXI);
+			periods.add(HistoricalPeriod.CONTEMPORARY_HISTORY_XXI);
 		}
 		
-		return periods;
+		Set<PeriodNER> periodsNER = new LinkedHashSet<>();
+		for (HistoricalPeriod hp : periods) {
+			periodsNER.add(new PeriodNER(hp, hp.name().replace("_", " "), year, hp.getLink()));
+		}
+		
+		return periodsNER;
 	}
 	
 	private SentenceNER extractDates (SentenceNER sentence) {

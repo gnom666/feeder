@@ -22,6 +22,8 @@ public interface LocationRepository extends PagingAndSortingRepository<LocationN
 	
 	List<LocationNER> findTop100ByCountryNameIgnoreCaseContainingOrCityNameIgnoreCaseContainingOrRegionNameIgnoreCaseContaining(String countryName, String cityName, String regionName);
 	
+	List<LocationNER> findTopByCountryNameIgnoreCaseContainingOrCityNameIgnoreCaseContainingOrRegionNameIgnoreCaseContaining(String countryName, String cityName, String regionName);
+	
 	List<LocationNER> findTop100ByCountryNameIgnoreCaseContainingOrCityNameIgnoreCaseContaining(String countryName, String cityName);
 	
 	//List<Location> findREgistries();

@@ -44,6 +44,10 @@ public class LocationNER {
 	@Transient
 	private String undeterminedName;
 	
+	@Transient
+	private GeoLink geoLink;
+	
+	
 	public boolean equal (LocationNER l) {
 		return (this.countryName.equals(l.getCountryName()) &&
 				this.regionName.equals(l.getRegionName()) &&

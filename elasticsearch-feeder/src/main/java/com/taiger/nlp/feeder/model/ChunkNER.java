@@ -6,17 +6,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-@ToString
-@Setter
 @Getter
-@NoArgsConstructor
+@Setter
+@ToString
 @AllArgsConstructor
-public class PeriodNER {
-	
-	private HistoricalPeriod period;
-	private String name;
-	private int year;
+@NoArgsConstructor
+public class ChunkNER {
+
+	private int begin;
+	private int size;
+	private String text;
 	private String link;
-	
 	
 }
