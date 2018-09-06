@@ -8,6 +8,7 @@ import java.util.Set;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,7 +40,7 @@ public class IndexService {
 	@Autowired
 	private DocumentLinkRepository docLinkRepo;
 
-	@Deprecated
+	/*@Deprecated
 	@RequestMapping(value="/index", method=RequestMethod.GET, produces="application/json;charset=UTF-8")
     public Document4d index (@RequestParam(value="id", defaultValue="") String id, @RequestParam(value="text", defaultValue="") String text) {
 		Assert.notNull(text, "text shouldn't be null");
@@ -71,7 +72,53 @@ public class IndexService {
 		if (lst != null && lst.size() > 0) doc = lst.get(0);
 		
 		return doc;
-    }
+    }*/
+	
+	@RequestMapping(value="/index", method=RequestMethod.POST, produces="application/json;charset=UTF-8")
+    public List<Document4d> indexPost (@RequestParam(value="id", defaultValue="") String id, @RequestBody String text) {
+		Assert.notNull(text, "text shouldn't be null");
+		Assert.notNull(id, "id shouldn't be null");
+		if (text.trim().isEmpty()) return null;
+		
+		Indexer indx = new Indexer(docRepo, docLinkRepo);
+		indx.remove4dDoc(id);
+		indx.removeLinkDoc(id);
+		
+		List<LocationNER> locations = new ArrayList<>();
+		Set<PeriodNER> periods = new LinkedHashSet<>();
+		
+		DocumentLink docLink = new DocumentLink(id);
+		
+		Text textSentences = config.splitter().detect(text);
+		for (String textSentence : textSentences.getSentences()) {
+			if (!textSentence.trim().isEmpty()) {
+				SentenceNER s;
+				s = config.tokenizer().tokenize(textSentence.trim());
+				s = config.tagger().annotate(s);
+				s = config.dateNER().annotate(s);
+				s = config.locationNER().annotate(s);
+				Assert.notNull(s, "sentence is null");
+				s.getLocations().forEach(loc -> Utils.addLocation(locations, loc));
+				s.getPeriods().forEach(periods::add);
+				
+				docLink.getText().add(s);
+			}
+		}
+		
+		indx.index(docLink);
+
+		locations.forEach (loc -> {
+			Document4d doc = new Document4d(id);
+			doc.setLocation(loc);
+			doc.setPeriods(periods);
+			doc.setGp(new GeoPoint(loc.getLatitude(), loc.getLongitude()).geohash());
+			indx.forcedIndex(doc);
+		});
+		
+		Searcher srch = new Searcher(docRepo, docLinkRepo);
+		
+		return srch.findBySolrId(id);
+	}
 	
 	@RequestMapping(value="/indexloc", method=RequestMethod.GET, produces="application/json;charset=UTF-8")
     public List<Document4d> indexLoc (@RequestParam(value="id", defaultValue="") String id, @RequestParam(value="text", defaultValue="") String text) {

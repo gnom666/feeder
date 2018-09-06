@@ -71,17 +71,24 @@ public class RestConsumer {
 		ObjectMapper mapper = new ObjectMapper();
 		DBPediaLocation dbpl = new DBPediaLocation();
 		
+		log.info(text);
+		log.info(types);
+		
 		try {
 
 			URL url = new URL(Constants.DBPEDIA_EN_URL 
 							+ Constants.TEXT_PARAM + URLEncoder.encode(text, "UTF-8")
 			 				+ "&" + Constants.TYPES_PARAM + URLEncoder.encode(types, "UTF-8"));
+			log.info(url);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setRequestMethod("GET");
 			conn.setRequestProperty("Accept", "application/json");
 			
 			if (conn.getResponseCode() != 200) {
-				throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+				if (conn.getResponseCode() == 502 && conn.getResponseCode() != 200) 
+					throw new RuntimeException("Failed twice : HTTP error code : " + conn.getResponseCode());
+				else
+					throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
 			}
 			
 			BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
